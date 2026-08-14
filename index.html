@@ -1,12 +1,621 @@
-<!DOCTYPE html>40%"],["👟","Men's Sneaker Shoes","1949","2999","4.7","-35%"],["👜","Elegant Women Handbag","1399","1999","4.6","-30%"],["🎧","Wireless Headphones","1699","3099","4.8","-45%"],["🍳","Non Stick Cookware Set","2199","3299","4.7","-33%"],["📚","Study Books Set (6 Pcs)","899","1199","4.6","-25%"]];
-let cart=JSON.parse(localStorage.getItem("kamvexo_cart")||"[]");
-function renderProducts(list=products){document.getElementById("productGrid").innerHTML=list.map((p,i)=>`<article class="product"><span class="badge">${p[5]}</span><div class="pic">${p[0]}</div><div class="info"><h3>${p[1]}</h3><div class="price">৳${p[2]} <span class="old">৳${p[3]}</span></div><div class="rating">★ ${p[4]}</div><button class="cartbtn" onclick="addCart(${i})">🛒 Add to Cart</button></div></article>`).join("")}
-function addCart(i){cart.push(products[i]);localStorage.setItem("kamvexo_cart",JSON.stringify(cart));updateCart();alert("পণ্যটি Cart-এ যোগ হয়েছে।")}
-function updateCart(){document.getElementById("cartCount").textContent="("+cart.length+")";document.getElementById("cartList").innerHTML=cart.length?cart.map((p,i)=>`<div class="cart-row"><span>${p[0]} ${p[1]}</span><b>৳${p[2]}</b></div>`).join(""):"<p>আপনার Cart খালি।</p>"}
-function openModal(id){document.getElementById(id).classList.add("open");if(id==="cart")updateCart()}function closeModal(id){document.getElementById(id).classList.remove("open")}
-function setLogin(type){document.getElementById("loginFields").innerHTML=type==="mobile"?'<input class="field" placeholder="01XXXXXXXXX"><button class="primary" onclick="alert(\'Demo: OTP verification will be connected in the secure backend version.\')">Send OTP</button>':'<button class="primary" onclick="alert(\'Demo: Google OAuth will be connected in the secure backend version.\')">Continue with Google</button>'}
-function searchProducts(){const q=document.getElementById("search").value.toLowerCase();renderProducts(products.filter(p=>p[1].toLowerCase().includes(q)))} 
-document.getElementById("search").addEventListener("keydown",e=>{if(e.key==="Enter")searchProducts()});renderProducts();updateCart();
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>KAMVEXO - Everything You Need</title>
+
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
+
+body{
+  font-family:Arial,sans-serif;
+  background:#f5f6fa;
+  color:#101535;
+}
+
+header{
+  background:#fff;
+  padding:15px 5%;
+  box-shadow:0 2px 10px #0001;
+}
+
+.top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+}
+
+.logo{
+  font-size:30px;
+  font-weight:900;
+}
+
+.logo span{
+  color:#6c3cff;
+}
+
+.account,.cart{
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.search{
+  display:flex;
+  margin-top:15px;
+}
+
+.search input{
+  flex:1;
+  padding:14px;
+  border:1px solid #ddd;
+  border-radius:25px 0 0 25px;
+  font-size:16px;
+}
+
+.search button{
+  width:65px;
+  border:0;
+  background:#101535;
+  color:#fff;
+  border-radius:0 25px 25px 0;
+  font-size:20px;
+}
+
+nav{
+  display:flex;
+  gap:25px;
+  overflow-x:auto;
+  padding-top:18px;
+  white-space:nowrap;
+}
+
+nav a{
+  text-decoration:none;
+  color:#101535;
+  font-weight:bold;
+}
+
+.container{
+  padding:25px 5%;
+}
+
+.hero{
+  background:linear-gradient(120deg,#17114d,#703cff);
+  color:#fff;
+  border-radius:25px;
+  padding:50px 7%;
+}
+
+.hero h1{
+  font-size:42px;
+  margin:10px 0;
+}
+
+.hero p{
+  font-size:21px;
+  margin:10px 0;
+}
+
+.shop{
+  margin-top:20px;
+  padding:14px 25px;
+  border:0;
+  border-radius:12px;
+  background:#fff;
+  color:#101535;
+  font-weight:bold;
+}
+
+.title{
+  margin:40px 0 20px;
+  font-size:30px;
+}
+
+.categories{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:15px;
+}
+
+.category{
+  background:#fff;
+  padding:25px 10px;
+  text-align:center;
+  border-radius:18px;
+  box-shadow:0 2px 8px #0001;
+}
+
+.icon{
+  font-size:40px;
+  margin-bottom:10px;
+}
+
+.products{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:20px;
+}
+
+.product{
+  background:#fff;
+  padding:15px;
+  border-radius:18px;
+  box-shadow:0 2px 10px #0001;
+}
+
+.product-image{
+  height:160px;
+  background:#f0f1f7;
+  border-radius:15px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:75px;
+}
+
+.product h3{
+  margin:12px 0 8px;
+}
+
+.price{
+  color:#6c3cff;
+  font-size:20px;
+  font-weight:bold;
+  margin-bottom:12px;
+}
+
+.add{
+  width:100%;
+  padding:12px;
+  border:0;
+  border-radius:10px;
+  background:#101535;
+  color:#fff;
+  font-weight:bold;
+}
+
+#cartBox{
+  display:none;
+  position:fixed;
+  right:15px;
+  top:80px;
+  width:350px;
+  max-width:90%;
+  background:#fff;
+  padding:20px;
+  border-radius:20px;
+  box-shadow:0 5px 30px #0004;
+  z-index:1000;
+}
+
+.close{
+  float:right;
+  font-size:22px;
+}
+
+.cart-item{
+  padding:10px 0;
+  border-bottom:1px solid #ddd;
+}
+
+.total{
+  font-size:20px;
+  font-weight:bold;
+  margin:20px 0;
+}
+
+.order{
+  width:100%;
+  padding:14px;
+  background:#25d366;
+  color:#fff;
+  border:0;
+  border-radius:10px;
+  font-weight:bold;
+}
+
+footer{
+  margin-top:50px;
+  padding:40px 5%;
+  text-align:center;
+  background:#101535;
+  color:#fff;
+}
+
+@media(max-width:800px){
+
+.products{
+  grid-template-columns:repeat(2,1fr);
+}
+
+.hero h1{
+  font-size:32px;
+}
+
+}
+
+@media(max-width:500px){
+
+.top{
+  flex-wrap:wrap;
+}
+
+.logo{
+  font-size:25px;
+}
+
+.products{
+  gap:10px;
+}
+
+.product-image{
+  height:130px;
+  font-size:60px;
+}
+
+.hero{
+  padding:35px 25px;
+}
+
+.hero h1{
+  font-size:30px;
+}
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="top">
+
+<div class="logo">
+KAM<span>VEXO</span>
+</div>
+
+<div class="account">
+👤 Account
+</div>
+
+<div class="cart" onclick="openCart()">
+🛒 Cart (<span id="cartCount">0</span>)
+</div>
+
+</div>
+
+<div class="search">
+
+<input
+id="search"
+type="text"
+placeholder="পণ্য খুঁজুন..."
+>
+
+<button onclick="searchProducts()">🔍</button>
+
+</div>
+
+<nav>
+
+<a href="#">Home</a>
+<a href="#categories">Categories</a>
+<a href="#products">Flash Sale 🔥</a>
+<a href="#products">New Arrivals</a>
+
+</nav>
+
+</header>
+
+
+<main class="container">
+
+<section class="hero">
+
+<p>WELCOME TO</p>
+
+<h1>KAMVEXO</h1>
+
+<p>Everything You Need,<br>In One Place.</p>
+
+<button class="shop" onclick="goProducts()">
+SHOP NOW →
+</button>
+
+</section>
+
+
+<h2 class="title" id="categories">
+Shop by Category
+</h2>
+
+<div class="categories">
+
+<div class="category">
+<div class="icon">👗</div>
+Women
+</div>
+
+<div class="category">
+<div class="icon">👔</div>
+Men
+</div>
+
+<div class="category">
+<div class="icon">👶</div>
+Kids
+</div>
+
+<div class="category">
+<div class="icon">📱</div>
+Electronics
+</div>
+
+<div class="category">
+<div class="icon">🏠</div>
+Home & Living
+</div>
+
+<div class="category">
+<div class="icon">🍳</div>
+Kitchen
+</div>
+
+</div>
+
+
+<h2 class="title" id="products">
+🔥 Featured Products
+</h2>
+
+<div class="products" id="productList"></div>
+
+</main>
+
+
+<div id="cartBox">
+
+<span class="close" onclick="closeCart()">✕</span>
+
+<h2>🛒 Your Cart</h2>
+
+<div id="cartItems"></div>
+
+<div class="total">
+Total: ৳<span id="total">0</span>
+</div>
+
+<button class="order" onclick="orderNow()">
+📱 WhatsApp-এ অর্ডার করুন
+</button>
+
+</div>
+
+
+<footer>
+
+<h2>KAMVEXO</h2>
+
+<p>Everything You Need, In One Place.</p>
+
+<br>
+
+<p>© 2026 KAMVEXO</p>
+
+</footer>
+
+
+<script>
+
+var products = [
+
+{
+name:"Smart Phone",
+price:15999,
+icon:"📱"
+},
+
+{
+name:"Wireless Headphone",
+price:1299,
+icon:"🎧"
+},
+
+{
+name:"Fashion Hand Bag",
+price:1890,
+icon:"👜"
+},
+
+{
+name:"Running Shoes",
+price:2490,
+icon:"👟"
+},
+
+{
+name:"Men's Shirt",
+price:990,
+icon:"👔"
+},
+
+{
+name:"Women's Dress",
+price:1490,
+icon:"👗"
+},
+
+{
+name:"Kitchen Set",
+price:850,
+icon:"🍳"
+},
+
+{
+name:"Home Decoration",
+price:1200,
+icon:"🏠"
+}
+
+];
+
+var cart = [];
+
+
+function showProducts(list){
+
+var box = document.getElementById("productList");
+
+box.innerHTML = "";
+
+for(var i=0;i<list.length;i++){
+
+box.innerHTML +=
+
+'<div class="product">'+
+
+'<div class="product-image">'+
+list[i].icon+
+'</div>'+
+
+'<h3>'+
+list[i].name+
+'</h3>'+
+
+'<div class="price">'+
+'৳'+list[i].price+
+'</div>'+
+
+'<button class="add" onclick="addCart('+i+')">'+
+'🛒 Add to Cart'+
+'</button>'+
+
+'</div>';
+
+}
+
+}
+
+
+function addCart(index){
+
+cart.push(products[index]);
+
+updateCart();
+
+alert("পণ্যটি Cart-এ যোগ হয়েছে।");
+
+}
+
+
+function updateCart(){
+
+document.getElementById("cartCount").innerText=cart.length;
+
+var items="";
+
+var total=0;
+
+for(var i=0;i<cart.length;i++){
+
+items +=
+
+'<div class="cart-item">'+
+cart[i].icon+" "+
+cart[i].name+
+' - ৳'+
+cart[i].price+
+'</div>';
+
+total += cart[i].price;
+
+}
+
+if(cart.length===0){
+
+items="<p>আপনার Cart খালি।</p>";
+
+}
+
+document.getElementById("cartItems").innerHTML=items;
+
+document.getElementById("total").innerText=total;
+
+}
+
+
+function openCart(){
+
+document.getElementById("cartBox").style.display="block";
+
+updateCart();
+
+}
+
+
+function closeCart(){
+
+document.getElementById("cartBox").style.display="none";
+
+}
+
+
+function goProducts(){
+
+document.getElementById("products").scrollIntoView({
+behavior:"smooth"
+});
+
+}
+
+
+function searchProducts(){
+
+var text=document.getElementById("search").value.toLowerCase();
+
+var result=[];
+
+for(var i=0;i<products.length;i++){
+
+if(products[i].name.toLowerCase().indexOf(text)!==-1){
+
+result.push(products[i]);
+
+}
+
+}
+
+showProducts(result);
+
+}
+
+
+function orderNow(){
+
+if(cart.length===0){
+
+alert("আপনার Cart খালি।");
+
+return;
+
+}
+
+alert("অর্ডার নেওয়ার ব্যবস্থা পরের ধাপে WhatsApp নম্বর দিয়ে চালু করা হবে।");
+
+}
+
+
+showProducts(products);
+
 </script>
+
 </body>
 </html>
